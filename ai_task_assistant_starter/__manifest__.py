@@ -1,0 +1,18 @@
+{
+    "name": "AI Task Assistant — Starter",
+    "version": "17.0.1.0.0",
+    "summary": "100 tasks/month — for small teams",
+    "description": "Paid tier for AI Task Assistant. 100 AI tasks per month. Requires the free AI Task Assistant base module.",
+    "category": "Project",
+    "author": "Alan Marquez",
+    "website": "https://www.lokeai.es",
+    "license": "OPL-1",
+    "depends": ["ai_task_assistant"],
+    "data": [],
+    "installable": True,
+    "application": False,
+    "auto_install": False,
+    "price": 79,
+    "currency": "EUR",
+    "support": "soporte@lokeai.es",
+}

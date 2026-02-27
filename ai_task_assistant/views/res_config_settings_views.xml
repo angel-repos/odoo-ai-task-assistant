@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+  <!-- Upgrade URL action (opens App Store when license limit reached) -->
+  <record id="action_ai_upgrade_license" model="ir.actions.act_url">
+    <field name="name">Upgrade to paid</field>
+    <field name="url">https://apps.odoo.com/apps/modules/browse?search=ai+task+assistant</field>
+    <field name="target">new</field>
+  </record>
+
+  <!-- Inject AI Task Assistant block into Project settings (Project > Configuration > Settings) -->
+  <record id="view_res_config_settings_form_ai_in_project" model="ir.ui.view">
+    <field name="name">res.config.settings.form.ai.task.assistant.in.project</field>
+    <field name="model">res.config.settings</field>
+    <field name="inherit_id" ref="project.res_config_settings_view_form"/>
+    <field name="arch" type="xml">
+      <xpath expr="//app[@name='project']" position="inside">
+        <block title="AI Task Assistant" name="ai_task_assistant">
+          <setting id="ai_license_setting" help="Activate or sync your AI Task Assistant license">
+            <field name="ai_api_key" invisible="1"/>
+            <div class="content-group" invisible="ai_api_key in [False, '']">
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="badge text-bg-success" invisible="ai_license_tier not in ['pro', 'business', 'unlimited']">
+                  <field name="ai_license_tier" readonly="1"/>
+                </span>
+                <span class="badge text-bg-warning" invisible="ai_license_tier != 'starter'">
+                  <field name="ai_license_tier" readonly="1"/>
+                </span>
+                <span class="badge text-bg-secondary" invisible="ai_license_tier != 'free'">Free</span>
+                <field name="ai_license_tasks_used" readonly="1"/>
+                <field name="ai_license_tasks_limit" readonly="1"/>
+                <field name="ai_license_reset_date" readonly="1"/>
+                <button name="action_sync_license" type="object" string="↻ Sync license" class="btn-link"/>
+                <button name="%(ai_task_assistant.action_ai_upgrade_license)d" type="action" string="⬆ Upgrade" class="btn-primary"
+                        invisible="ai_license_tasks_limit == 0 or ai_license_tasks_used &lt; ai_license_tasks_limit"/>
+              </div>
+            </div>
+            <div class="content-group" invisible="ai_api_key not in [False, '']">
+              <p class="text-muted mb-0">Activate your free license to start using AI Task Assistant (10 tasks/month included).</p>
+              <button name="action_activate_license" type="object" string="🚀 Activate free license" class="btn-link"/>
+            </div>
+          </setting>
+          <setting id="ai_auto_trigger_setting" help="Reserved for future use. Currently AI analysis is manual only (button in task form).">
+            <field name="ai_auto_trigger" readonly="1"/>
+          </setting>
+          <setting id="ai_llm_provider_setting" help="Select the LLM provider for AI task generation">
+            <field name="ai_llm_provider"/>
+            <field name="ai_llm_api_key" password="True" placeholder="API key (optional, overrides backend .env)" invisible="ai_llm_provider == 'ollama'"/>
+          </setting>
+          <setting id="ai_odoo_callback_setting" help="Configure how the backend connects back to Odoo for callbacks">
+            <field name="ai_odoo_callback_url" placeholder="http://host.docker.internal:8069"/>
+            <field name="ai_odoo_callback_login" placeholder="admin"/>
+            <field name="ai_odoo_callback_api_key" password="True" placeholder="Odoo API key"/>
+          </setting>
+          <setting id="ai_test_connection_setting" help="Test the connection between Odoo and the AI backend">
+            <button name="action_test_connection" type="object" string="Test connection" class="btn-link"/>
+          </setting>
+        </block>
+      </xpath>
+    </field>
+  </record>
+
+  <!-- Standalone form (only used when opening via AI Task Assistant menu; low priority so Project Settings stays default) -->
+  <record id="view_res_config_settings_form_ai" model="ir.ui.view">
+    <field name="name">res.config.settings.form.ai.task.assistant</field>
+    <field name="model">res.config.settings</field>
+    <field name="priority">99</field>
+    <field name="arch" type="xml">
+      <form string="AI Task Assistant">
+        <sheet>
+
+          <!-- ── BACKEND URL (readonly) ─────────────────────────────────── -->
+          <group string="Backend">
+            <field name="ai_backend_url" readonly="1"/>
+          </group>
+
+          <!-- ── LICENSE STATUS (shown when api_key is set) ─────────────── -->
+          <group string="License"
+                 invisible="ai_api_key in [False, '']">
+            <div class="o_field_widget o_wrap_field">
+              <span class="badge badge-pill badge-success"
+                    invisible="ai_license_tier not in ['pro', 'business', 'unlimited']">
+                <field name="ai_license_tier" readonly="1"/>
+              </span>
+              <span class="badge badge-pill badge-warning"
+                    invisible="ai_license_tier != 'starter'">
+                <field name="ai_license_tier" readonly="1"/>
+              </span>
+              <span class="badge badge-pill badge-secondary"
+                    invisible="ai_license_tier != 'free'">
+                Free
+              </span>
+            </div>
+            <field name="ai_license_tasks_used" readonly="1"/>
+            <field name="ai_license_tasks_limit" readonly="1"/>
+            <field name="ai_license_reset_date" readonly="1"/>
+            <div colspan="2" class="mt8">
+              <button name="action_sync_license"
+                      type="object"
+                      string="↻ Sync license"
+                      class="btn-secondary btn-sm"/>
+              <button name="%(ai_task_assistant.action_ai_upgrade_license)d"
+                      type="action"
+                      string="⬆ Upgrade"
+                      class="btn-primary"
+                      invisible="ai_license_tasks_limit == 0 or ai_license_tasks_used &lt; ai_license_tasks_limit"/>
+            </div>
+          </group>
+
+          <!-- ── ACTIVATE (shown only when NO api_key) ──────────────────── -->
+          <group string="License"
+                 invisible="ai_api_key not in [False, '']">
+            <div colspan="2">
+              <p class="text-muted">
+                Activate your free license to start using AI Task Assistant
+                (10 tasks/month included).
+              </p>
+              <button name="action_activate_license"
+                      type="object"
+                      string="🚀 Activate free license"
+                      class="btn-primary"/>
+            </div>
+          </group>
+
+          <!-- ── SAVE + TEST ─────────────────────────────────────────────── -->
+          <group string="Actions">
+            <div colspan="2">
+              <button name="execute" string="Save settings" type="object" class="btn-primary mr4"/>
+              <button name="action_test_connection" string="Test connection" type="object" class="btn-secondary"/>
+            </div>
+          </group>
+
+          <field name="ai_api_key" invisible="1"/>
+
+          <!-- ── ODOO CALLBACK ───────────────────────────────────────────── -->
+          <group string="Odoo callback">
+            <field name="ai_odoo_callback_url"
+                   placeholder="http://host.docker.internal:8069"
+                   help="URL the backend uses to reach Odoo. Leave empty to use the system base URL."/>
+            <field name="ai_odoo_callback_login" placeholder="admin"/>
+            <field name="ai_odoo_callback_api_key"
+                   password="True"
+                   placeholder="Odoo API key"
+                   help="Generate in: Users → (your user) → Account Security → New API Key."/>
+          </group>
+
+          <!-- ── OPTIONS ─────────────────────────────────────────────────── -->
+          <group string="Options">
+            <field name="ai_auto_trigger" readonly="1"/>
+            <field name="ai_llm_provider"/>
+            <field name="ai_llm_api_key"
+                   password="True"
+                   placeholder="API key for the selected LLM provider"
+                   help="If set, the backend uses this key instead of its own .env."/>
+          </group>
+
+        </sheet>
+      </form>
+    </field>
+  </record>
+
+  <!-- Action to open AI Task Assistant standalone form (explicit view_id so Project Settings is not overridden) -->
+  <record id="action_res_config_settings_ai" model="ir.actions.act_window">
+    <field name="name">AI Task Assistant</field>
+    <field name="res_model">res.config.settings</field>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_res_config_settings_form_ai"/>
+    <field name="target">inline</field>
+    <field name="context">{'module': 'project'}</field>
+  </record>
+
+  <!-- Menu under Project > Configuration: opens Project settings (includes our AI Task Assistant block) -->
+  <menuitem id="menu_res_config_settings_ai"
+            name="AI Task Assistant"
+            action="action_res_config_settings_ai"
+            parent="project.menu_project_config"
+            groups="base.group_system"
+            sequence="1"/>
+</odoo>

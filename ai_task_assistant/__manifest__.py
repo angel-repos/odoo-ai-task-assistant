@@ -1,0 +1,20 @@
+{
+    "name": "AI Task Assistant",
+    "version": "17.0.1.0.5",
+    "summary": "Auto-generate AI summaries and subtasks on task assignment",
+    "description": "See static/description/index.html",
+    "category": "Project",
+    "author": "Alan Marquez",
+    "website": "https://www.lokeai.es",
+    "license": "OPL-1",
+    "depends": ["project", "base_automation"],
+    "data": [
+        "security/ir.model.access.csv",
+        "views/res_config_settings_views.xml",
+        "views/project_task_views.xml",
+    ],
+    "images": ["static/description/banner.png"],
+    "installable": True,
+    "application": True,
+    "auto_install": False,
+}
