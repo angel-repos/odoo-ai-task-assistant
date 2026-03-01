@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+  <record id="view_task_form_ai_summary" model="ir.ui.view">
+    <field name="name">project.task.form.ai.summary</field>
+    <field name="model">project.task</field>
+    <field name="inherit_id" ref="project.view_task_form2"/>
+    <field name="arch" type="xml">
+      <xpath expr="//notebook" position="inside">
+        <page string="AI Assistant" name="ai_assistant_tab">
+          <group string="Status">
+            <field name="x_ai_status" widget="statusbar"
+                   statusbar_visible="pending,processing,done,error"/>
+          </group>
+          <div class="row">
+            <div class="col-12">
+              <label for="x_ai_summary" string="AI Summary"/>
+              <field name="x_ai_summary" nolabel="1" readonly="1"
+                     widget="html"
+                     placeholder="AI summary will appear here after assignment…"
+                     style="min-height: 4em;"/>
+            </div>
+          </div>
+        </page>
+      </xpath>
+      <xpath expr="//field[@name='child_ids']" position="before">
+        <field name="x_has_subtasks" invisible="1"/>
+        <field name="x_ai_subtasks_generated" invisible="1"/>
+        <field name="x_ai_license_ok" invisible="1"/>
+        <div class="mb-2" invisible="not x_ai_license_ok or not description">
+          <label for="x_ai_subtask_instructions" string="Instructions (optional)"/>
+          <field name="x_ai_subtask_instructions"
+                 nolabel="1"
+                 placeholder="e.g. Focus on testing, include deployment steps…"
+                 widget="text"/>
+        </div>
+        <span class="text-muted" invisible="x_ai_status != 'processing'">Processing… Please wait.</span>
+        <button name="action_trigger_ai_analysis"
+                type="object"
+                string="Generate sub-tasks with AI"
+                class="btn-primary"
+                invisible="x_ai_status == 'processing' or x_ai_subtasks_generated or not x_ai_license_ok or not description"/>
+        <button name="action_trigger_ai_analysis"
+                type="object"
+                string="Regenerate sub-tasks with AI"
+                class="btn-primary"
+                invisible="x_ai_status == 'processing' or not x_ai_subtasks_generated or not x_ai_license_ok or not description"/>
+        <button name="%(ai_task_assistant.action_ai_upgrade_license)d"
+                type="action"
+                string="⬆ Upgrade"
+                class="btn-primary"
+                invisible="x_ai_status == 'processing' or x_ai_license_ok"/>
+      </xpath>
+    </field>
+  </record>
+</odoo>
